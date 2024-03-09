@@ -7,28 +7,47 @@ serde = {version="1.0", features = ["derive"]}
 ```
 serde is like an encoder or decoder, it is used for encoding data when we send data over the internet, and decode data when we receive binary data from the net, we will see its usage. Before buidling our
 web backend server, we need to understand one important concept in Rust that is closure. Closure is just like function pointer in c, inline function in c++, lambda in python, and anonymous function in js,
-we can assign a function like block to a veriable without executing the code, and we can execute the code when time is right by using that variable, let's see an example here:
+we can assign a function like block to a veriable without executing the code, and we can pass this variable into a function, that means a function can receive a piece of code as its parameter and call 
+that piece of code to complete some task, let's see an example:
 ```js
-fn print_x(x: i32) {
-    println!("x value in function call is: {}", x);
+fn function_with_closure<G>(f: G)
+where
+    G: FnOnce(&str),
+{
+    f("hello world!");
 }
-
 fn main() {
     /*
     parameters passed in closure is using two bars ||
     */
-    let print_x_closure = |x| {
-        println!("x value in closure call is: {}", x);
+    let s = "the content of x is :";
+    let print_x_closure = |x: &str| {
+        println!("{} {}", s, x);
     };
 
-    print_x(1);
-    print_x_closure(2);
+    function_with_closure(print_x_closure);
+
+    function_with_closure(|x| {
+        println!("{}: {}", s, x);
+    });
 }
+
 ```
-from above code we can see the calling of closure and function are the same, for closure the passed in paramter are in two bars and for function are in brackets. Clousre will widly used as callback in application.
+from above code , print_x_closure is a closure, it defines a piece of code, it is different with normal function by its parameters, it uses two bars to receive param and normal function use brackets, and
+closure can capture contex outside its body, for example the s variable is defined outsize of it, but when it is passed into function_with_closure as patameter, the s can still accessible in the body of 
+function_with_closure, this is its amazing charm.
+
+Let's see how we can defined a closure as parameter in funciton, first we need the FnOnece keyword, this tell the compiler we will pass a closure as parameter, and anything insize the brackets following
+the FnOnce keyword is the type of parameter that can pass into the closure, the where is a keyword of Rust, it is a little be like where in sql, it defines the properties for a type, in the above code, 
+it defines G is a type of closure with string literal as its parameter, and we can see we have two ways to pass closure as parameters, one is assign it to a variable and pass that variable to the function,
+the other is we can define the closure in the place of the parameter when we calling that function. Running the above code you will get the following result:
+```r
+the content of x is : hello world!
+the content of x is :: hello world!
+```
 
 
-Let's create a simple web server by using actix-web:
+Let's create a simple web server by using actix-web, and we will use closure in the code:
 ```r
 use actix_web::{web, App, HttpResponse, HttpServer};
 
